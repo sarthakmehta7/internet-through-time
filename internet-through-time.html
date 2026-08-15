@@ -1,0 +1,1347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+<title>INTERNET THROUGH TIME</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   TOKENS
+   ============================================================ */
+:root{
+  --bg-0:#05070a;
+  --bg-1:#0a0e14;
+  --ink-0:#eef4f4;
+  --ink-1:#9fb3b8;
+  --ink-2:#5c6e73;
+  --accent:#33ff8c;
+  --accent-2:#2de2c8;
+  --line: rgba(255,255,255,0.09);
+  --glass: rgba(255,255,255,0.035);
+  --font-display:'Space Mono', monospace;
+  --font-body:'Inter', sans-serif;
+  --era-progress: 0%;
+}
+*{box-sizing:border-box; margin:0; padding:0;}
+html{scroll-behavior:smooth;}
+html,body{
+  background:var(--bg-0);
+  color:var(--ink-0);
+  font-family:var(--font-body);
+  overflow-x:hidden;
+  width:100%;
+}
+body.locked{overflow:hidden; height:100vh;}
+::selection{background:var(--accent); color:#000;}
+a{color:inherit; text-decoration:none;}
+button{font-family:inherit; cursor:pointer; border:none; background:none; color:inherit;}
+::-webkit-scrollbar{width:10px;}
+::-webkit-scrollbar-track{background:var(--bg-0);}
+::-webkit-scrollbar-thumb{background:var(--line); border-radius:6px;}
+
+.reduced-motion *{animation-duration:.001s !important; transition-duration:.15s !important;}
+
+h1,h2,h3{font-family:var(--font-display); letter-spacing:.02em;}
+.eyebrow{
+  font-family:var(--font-display);
+  font-size:.72rem;
+  letter-spacing:.28em;
+  text-transform:uppercase;
+  color:var(--accent);
+  display:flex; align-items:center; gap:.6em;
+}
+.eyebrow::before{content:''; width:20px; height:1px; background:var(--accent);}
+
+/* ============================================================
+   PARTICLE / CURSOR CANVASES
+   ============================================================ */
+#bg-canvas{position:fixed; inset:0; z-index:0; pointer-events:none; opacity:.55;}
+#cursor-canvas{position:fixed; inset:0; z-index:9998; pointer-events:none;}
+
+/* ============================================================
+   LANDING
+   ============================================================ */
+#landing{
+  position:fixed; inset:0; z-index:9000;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  background:radial-gradient(ellipse at 50% 20%, #0d1a17 0%, #05070a 55%, #020304 100%);
+  text-align:center;
+  transition:opacity 1s ease, visibility 1s ease;
+}
+#landing.hidden{opacity:0; visibility:hidden; pointer-events:none;}
+#landing canvas{position:absolute; inset:0; width:100%; height:100%;}
+.landing-inner{position:relative; z-index:2; padding:2rem;}
+.landing-title{
+  font-family:var(--font-display);
+  font-weight:700;
+  font-size:clamp(2.4rem, 9vw, 6.2rem);
+  line-height:1.02;
+  letter-spacing:-.01em;
+  text-transform:uppercase;
+}
+.landing-title .l2{
+  color:var(--accent);
+  text-shadow:0 0 30px rgba(51,255,140,.5);
+}
+.landing-sub{
+  margin-top:1.4rem;
+  color:var(--ink-1);
+  font-size:clamp(.95rem, 1.6vw, 1.15rem);
+  max-width:36rem;
+  margin-left:auto; margin-right:auto;
+}
+.enter-btn{
+  margin-top:2.6rem;
+  padding:1.05rem 2.4rem;
+  border:1px solid var(--accent);
+  border-radius:999px;
+  font-family:var(--font-display);
+  letter-spacing:.14em;
+  font-size:.85rem;
+  text-transform:uppercase;
+  color:var(--bg-0);
+  background:var(--accent);
+  position:relative;
+  transition:transform .25s ease, box-shadow .25s ease;
+  box-shadow:0 0 0 0 rgba(51,255,140,.5);
+}
+.enter-btn:hover{ box-shadow:0 0 40px 4px rgba(51,255,140,.45); }
+.landing-hint{
+  margin-top:1.1rem; font-family:var(--font-display); font-size:.68rem;
+  letter-spacing:.2em; color:var(--ink-2); text-transform:uppercase;
+}
+
+#boot-screen{
+  position:fixed; inset:0; z-index:9500;
+  background:#000;
+  color:var(--accent);
+  font-family:var(--font-display);
+  display:none;
+  align-items:center; justify-content:center;
+  padding:2rem;
+}
+#boot-screen.active{display:flex;}
+#boot-lines{max-width:34rem; width:100%; font-size:clamp(.85rem,2vw,1.15rem); line-height:2;}
+#boot-lines div{opacity:0; white-space:pre-wrap;}
+.boot-cursor{display:inline-block; width:.6em; height:1em; background:var(--accent); vertical-align:middle; animation:blink 1s steps(1) infinite;}
+@keyframes blink{50%{opacity:0;}}
+
+/* ============================================================
+   NAV
+   ============================================================ */
+#topnav{
+  position:fixed; top:0; left:0; right:0; z-index:500;
+  display:flex; align-items:center; justify-content:space-between;
+  padding:.9rem 1.4rem;
+  backdrop-filter:blur(14px);
+  background:rgba(5,7,10,.55);
+  border-bottom:1px solid var(--line);
+  opacity:0; transform:translateY(-100%);
+  transition:opacity .6s ease, transform .6s ease, background .6s ease, border-color .6s ease;
+}
+#topnav.show{opacity:1; transform:translateY(0);}
+.nav-left{display:flex; align-items:center; gap:1.6rem;}
+.brand{font-family:var(--font-display); font-weight:700; font-size:.85rem; letter-spacing:.08em; display:flex; align-items:center; gap:.5rem;}
+.brand-dot{width:8px; height:8px; border-radius:50%; background:var(--accent); box-shadow:0 0 10px var(--accent);}
+.nav-links{display:flex; gap:1.3rem; font-family:var(--font-display); font-size:.68rem; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-1);}
+.nav-links a{position:relative; padding:.2rem 0; transition:color .2s;}
+.nav-links a:hover{color:var(--ink-0);}
+.nav-right{display:flex; align-items:center; gap:1rem;}
+.era-badge{
+  font-family:var(--font-display); font-size:.68rem; letter-spacing:.1em;
+  border:1px solid var(--line); padding:.4rem .8rem; border-radius:999px; color:var(--accent);
+  white-space:nowrap;
+}
+.hud-mini{font-family:var(--font-display); font-size:.62rem; letter-spacing:.08em; color:var(--ink-2); display:flex; gap:.7rem;}
+.icon-btn{
+  width:34px; height:34px; border-radius:50%; border:1px solid var(--line);
+  display:flex; align-items:center; justify-content:center; font-size:.9rem;
+  transition:border-color .2s, transform .2s, background .2s;
+}
+.icon-btn:hover{border-color:var(--accent); transform:translateY(-2px);}
+
+/* timeline rail */
+#timeline-rail{
+  position:fixed; top:58px; left:0; right:0; z-index:490;
+  display:flex; align-items:center; justify-content:center;
+  padding:.55rem 1rem;
+  opacity:0; transform:translateY(-30px);
+  transition:opacity .6s ease .1s, transform .6s ease .1s;
+  pointer-events:none;
+}
+#timeline-rail.show{opacity:1; transform:translateY(0); pointer-events:auto;}
+.rail-track{
+  position:relative; display:flex; gap:clamp(.6rem,3vw,2.4rem); align-items:center;
+  padding:.5rem 1.1rem; border-radius:999px;
+  background:rgba(10,14,20,.6); backdrop-filter:blur(10px); border:1px solid var(--line);
+  overflow-x:auto; max-width:96vw;
+}
+.rail-track::before{
+  content:''; position:absolute; left:1.1rem; right:1.1rem; top:50%; height:1px;
+  background:linear-gradient(90deg, transparent, var(--line) 10%, var(--line) 90%, transparent);
+  z-index:0;
+}
+.rail-node{
+  position:relative; z-index:1; display:flex; flex-direction:column; align-items:center; gap:.3rem;
+  font-family:var(--font-display); font-size:.62rem; letter-spacing:.06em; color:var(--ink-2);
+  white-space:nowrap; flex:0 0 auto;
+}
+.rail-dot{width:8px; height:8px; border-radius:50%; background:var(--ink-2); transition:all .3s; border:1px solid transparent;}
+.rail-node.active{color:var(--accent);}
+.rail-node.active .rail-dot{background:var(--accent); box-shadow:0 0 12px var(--accent); transform:scale(1.4);}
+.rail-node.visited .rail-dot{background:var(--accent-2);}
+
+/* ============================================================
+   HUD (discovery)
+   ============================================================ */
+#hud{
+  position:fixed; right:1.1rem; bottom:1.1rem; z-index:480;
+  background:rgba(8,11,15,.7); backdrop-filter:blur(12px);
+  border:1px solid var(--line); border-radius:16px;
+  padding:.9rem 1.1rem; width:198px;
+  font-family:var(--font-display); font-size:.64rem; letter-spacing:.04em; color:var(--ink-1);
+  opacity:0; transform:translateY(20px);
+  transition:opacity .6s ease, transform .6s ease;
+}
+#hud.show{opacity:1; transform:translateY(0);}
+#hud h4{font-size:.6rem; letter-spacing:.16em; color:var(--accent); margin-bottom:.55rem; text-transform:uppercase;}
+.hud-row{display:flex; justify-content:space-between; margin-bottom:.32rem;}
+.hud-row b{color:var(--ink-0);}
+.hud-bar{height:4px; background:var(--line); border-radius:99px; margin-top:.55rem; overflow:hidden;}
+.hud-bar i{display:block; height:100%; width:0%; background:linear-gradient(90deg,var(--accent),var(--accent-2)); transition:width .5s ease;}
+
+/* ============================================================
+   SECTIONS / ERA ROOMS
+   ============================================================ */
+main{position:relative; z-index:1;}
+.era{
+  position:relative;
+  min-height:100vh;
+  width:100%;
+  padding:8.5rem 1.4rem 6rem;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  overflow:hidden;
+  border-bottom:1px solid var(--line);
+  transition:background 1s ease;
+}
+.era-inner{position:relative; z-index:3; max-width:74rem; width:100%; margin:0 auto;}
+.era-head{text-align:center; margin-bottom:3rem;}
+.era-year{
+  font-family:var(--font-display); font-weight:700; font-size:clamp(2.6rem,9vw,5.4rem);
+  line-height:1; color:var(--ink-0); text-shadow:0 0 40px var(--glow, transparent);
+}
+.era-title{margin-top:.6rem; font-size:clamp(1rem,2vw,1.3rem); color:var(--ink-1); font-weight:500;}
+.era-blurb{max-width:38rem; margin:1rem auto 0; color:var(--ink-2); font-size:.92rem; line-height:1.6;}
+
+.grid-bg{
+  position:absolute; inset:0; z-index:0; opacity:.35;
+  background-image:
+    linear-gradient(var(--line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--line) 1px, transparent 1px);
+  background-size:42px 42px;
+  mask-image:radial-gradient(ellipse at 50% 40%, black, transparent 75%);
+}
+.era-glow{
+  position:absolute; z-index:0; width:60vw; height:60vw; max-width:900px; max-height:900px;
+  border-radius:50%; filter:blur(90px); opacity:.18; pointer-events:none;
+  background:var(--accent); top:-10%; left:50%; transform:translateX(-50%);
+}
+
+/* object grid */
+.object-field{
+  display:grid; grid-template-columns:repeat(auto-fit, minmax(150px,1fr)); gap:1.1rem;
+}
+.obj{
+  position:relative;
+  background:var(--glass);
+  border:1px solid var(--line);
+  border-radius:18px;
+  padding:1.5rem 1.1rem;
+  text-align:center;
+  display:flex; flex-direction:column; align-items:center; gap:.6rem;
+  cursor:pointer;
+  transition:transform .35s cubic-bezier(.2,.8,.2,1), border-color .3s, background .3s, box-shadow .3s;
+}
+.obj:hover{
+  transform:translateY(-6px);
+  border-color:var(--accent);
+  background:rgba(255,255,255,.06);
+  box-shadow:0 14px 40px -14px rgba(0,0,0,.6), 0 0 24px -6px var(--accent);
+}
+.obj .glyph{font-size:2rem; filter:drop-shadow(0 0 10px rgba(255,255,255,.15));}
+.obj .label{font-family:var(--font-display); font-size:.7rem; letter-spacing:.06em; color:var(--ink-1); text-transform:uppercase;}
+.obj.discovered::after{
+  content:'✓'; position:absolute; top:.5rem; right:.6rem; font-size:.65rem; color:var(--accent);
+  font-family:var(--font-display);
+}
+
+/* connecting lines svg overlay for network eras */
+.net-svg{position:absolute; inset:0; z-index:1; pointer-events:none;}
+.net-svg line{stroke:var(--accent); stroke-opacity:.28; stroke-width:1;}
+.net-svg circle.packet{fill:var(--accent);}
+
+/* 1990s browser sim */
+.browser-shell{
+  background:#12161d; border:1px solid var(--line); border-radius:12px; overflow:hidden;
+  max-width:640px; margin:2rem auto 0; box-shadow:0 30px 70px -30px rgba(0,0,0,.7);
+}
+.browser-bar{display:flex; align-items:center; gap:.5rem; padding:.55rem .8rem; background:#181e27; border-bottom:1px solid var(--line);}
+.browser-dot{width:10px; height:10px; border-radius:50%;}
+.browser-url{flex:1; background:#0d1117; border-radius:6px; padding:.3rem .7rem; font-family:var(--font-display); font-size:.68rem; color:var(--ink-1); margin-left:.6rem;}
+.browser-body{padding:1.4rem; min-height:220px; font-size:.85rem; color:var(--ink-1); line-height:1.6;}
+.browser-links{display:flex; flex-wrap:wrap; gap:.6rem; margin-top:1rem;}
+.browser-links a{border:1px solid var(--line); padding:.35rem .7rem; border-radius:8px; font-size:.75rem; color:var(--accent);}
+.browser-links a:hover{background:rgba(51,255,140,.08);}
+.connect-btn{
+  display:block; margin:0 auto; padding:1rem 2.2rem; border-radius:999px; border:1px solid var(--accent);
+  font-family:var(--font-display); letter-spacing:.12em; font-size:.78rem; color:var(--accent); text-transform:uppercase;
+  transition:all .3s;
+}
+.connect-btn:hover{background:var(--accent); color:#000;}
+#modem-status{text-align:center; font-family:var(--font-display); font-size:.72rem; color:var(--ink-2); margin-top:1rem; min-height:1.4em;}
+
+/* 2010s phone */
+.phone-wrap{display:flex; justify-content:center; margin-top:1rem;}
+.phone{
+  width:min(300px, 76vw); aspect-ratio:9/18.5; border-radius:2.6rem; border:8px solid #14181f;
+  background:linear-gradient(160deg,#0d1420,#090c12);
+  padding:1.3rem 1rem; box-shadow:0 40px 80px -30px rgba(0,0,0,.8), 0 0 0 1px var(--line);
+  display:grid; grid-template-columns:repeat(3,1fr); gap:.9rem; align-content:start;
+}
+.phone .app{
+  display:flex; flex-direction:column; align-items:center; gap:.35rem; font-size:1.5rem;
+  border-radius:16px; padding:.6rem 0; background:rgba(255,255,255,.04); border:1px solid var(--line);
+  transition:transform .25s;
+}
+.phone .app:hover{transform:scale(1.08); border-color:var(--accent);}
+.phone .app span{font-family:var(--font-display); font-size:.5rem; color:var(--ink-2); letter-spacing:.04em;}
+
+/* info panel / modal */
+#panel-backdrop{
+  position:fixed; inset:0; z-index:9600; background:rgba(2,3,5,.72); backdrop-filter:blur(6px);
+  display:flex; align-items:center; justify-content:center; padding:1.4rem;
+  opacity:0; pointer-events:none; transition:opacity .3s ease;
+}
+#panel-backdrop.show{opacity:1; pointer-events:auto;}
+#panel{
+  width:min(480px,92vw); background:#0b0f14; border:1px solid var(--line); border-radius:18px;
+  overflow:hidden; transform:translateY(24px) scale(.97); transition:transform .35s cubic-bezier(.2,.8,.2,1);
+  box-shadow:0 40px 100px -30px rgba(0,0,0,.8);
+}
+#panel-backdrop.show #panel{transform:translateY(0) scale(1);}
+.panel-bar{display:flex; align-items:center; justify-content:space-between; padding:.7rem 1rem; border-bottom:1px solid var(--line); background:rgba(255,255,255,.02);}
+.panel-bar span{font-family:var(--font-display); font-size:.62rem; letter-spacing:.14em; color:var(--accent); text-transform:uppercase;}
+.panel-close{width:26px; height:26px; border-radius:50%; border:1px solid var(--line); display:flex; align-items:center; justify-content:center;}
+.panel-close:hover{border-color:var(--accent);}
+.panel-body{padding:1.5rem 1.4rem 1.7rem;}
+.panel-body h3{font-size:1.15rem; margin-bottom:.7rem;}
+.panel-body p{color:var(--ink-1); font-size:.9rem; line-height:1.65;}
+
+/* secret toast */
+#secret-toast{
+  position:fixed; top:1.2rem; left:50%; transform:translate(-50%,-140%); z-index:9700;
+  background:linear-gradient(120deg, rgba(51,255,140,.14), rgba(45,226,200,.1));
+  border:1px solid var(--accent); border-radius:14px; padding:.9rem 1.3rem;
+  font-family:var(--font-display); font-size:.78rem; letter-spacing:.06em; color:var(--accent);
+  transition:transform .5s cubic-bezier(.2,.8,.2,1); display:flex; align-items:center; gap:.6rem;
+  box-shadow:0 20px 50px -20px rgba(0,0,0,.6);
+}
+#secret-toast.show{transform:translate(-50%,0);}
+
+/* world map */
+#world-map-wrap{display:flex; justify-content:center; margin-top:1.5rem;}
+.globe{
+  position:relative; width:min(560px,90vw); aspect-ratio:1/1; border-radius:50%;
+  background:radial-gradient(circle at 35% 30%, rgba(51,255,140,.12), transparent 60%), #0a0f16;
+  border:1px solid var(--line); overflow:hidden;
+  box-shadow:inset 0 0 60px rgba(0,0,0,.6), 0 0 80px -20px rgba(51,255,140,.15);
+}
+.globe-grid{position:absolute; inset:0; animation:spin 60s linear infinite;}
+.globe-grid.reduce{animation:none;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.globe-grid svg{width:100%; height:100%;}
+.marker{
+  position:absolute; width:14px; height:14px; margin:-7px; border-radius:50%;
+  background:var(--accent); box-shadow:0 0 12px var(--accent);
+  transform:translate(-50%,-50%);
+  cursor:pointer;
+}
+.marker::after{
+  content:''; position:absolute; inset:-8px; border-radius:50%; border:1px solid var(--accent); opacity:.5;
+  animation:ping 2.4s ease-out infinite;
+}
+@keyframes ping{0%{transform:scale(.6); opacity:.7;} 100%{transform:scale(2.4); opacity:0;}}
+.marker-label{
+  position:absolute; top:100%; left:50%; transform:translateX(-50%); margin-top:.35rem;
+  font-family:var(--font-display); font-size:.58rem; color:var(--ink-1); white-space:nowrap; opacity:0; transition:opacity .2s;
+}
+.marker:hover .marker-label{opacity:1;}
+
+/* discoveries section */
+.stat-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:1rem; margin-top:2rem;}
+.stat-card{background:var(--glass); border:1px solid var(--line); border-radius:16px; padding:1.6rem 1.2rem; text-align:center;}
+.stat-num{font-family:var(--font-display); font-size:2.1rem; color:var(--accent);}
+.stat-lbl{font-family:var(--font-display); font-size:.62rem; letter-spacing:.14em; color:var(--ink-2); margin-top:.4rem; text-transform:uppercase;}
+#secrets-list{margin-top:1.6rem; display:flex; flex-wrap:wrap; gap:.6rem; justify-content:center;}
+.secret-chip{border:1px solid var(--line); border-radius:999px; padding:.4rem .9rem; font-family:var(--font-display); font-size:.62rem; color:var(--ink-2);}
+.secret-chip.found{border-color:var(--accent); color:var(--accent);}
+
+/* footer / about */
+#about{padding-bottom:9rem;}
+.credit-card{
+  margin-top:2.4rem; padding:1.6rem 1.6rem; border:1px solid var(--line); border-radius:18px;
+  background:var(--glass); text-align:center; max-width:30rem; margin-left:auto; margin-right:auto;
+}
+.credit-card .name{font-family:var(--font-display); font-size:1rem; color:var(--accent); letter-spacing:.04em;}
+.credit-card .meta{margin-top:.5rem; display:flex; flex-direction:column; gap:.3rem; font-size:.8rem; color:var(--ink-1);}
+.credit-card .meta a:hover{color:var(--accent);}
+
+.reduce-motion-toggle{
+  position:fixed; left:1.1rem; bottom:1.1rem; z-index:480;
+  font-family:var(--font-display); font-size:.6rem; letter-spacing:.08em; color:var(--ink-2);
+  border:1px solid var(--line); border-radius:999px; padding:.5rem .9rem; text-transform:uppercase;
+  background:rgba(8,11,15,.6); backdrop-filter:blur(10px);
+  opacity:0; transition:opacity .6s ease;
+}
+.reduce-motion-toggle.show{opacity:1;}
+.reduce-motion-toggle.active{color:var(--accent); border-color:var(--accent);}
+
+/* magnetic cursor dot */
+.cursor-dot{position:fixed; width:8px; height:8px; border-radius:50%; background:var(--accent); pointer-events:none; z-index:9999; transform:translate(-50%,-50%); box-shadow:0 0 10px var(--accent); display:none;}
+@media(hover:hover) and (pointer:fine){.cursor-dot{display:block;}}
+
+@media (max-width:640px){
+  .nav-links{display:none;}
+  #hud{width:150px; font-size:.58rem;}
+  .rail-track{gap:.7rem;}
+}
+</style>
+</head>
+<body class="locked">
+
+<canvas id="bg-canvas"></canvas>
+<canvas id="cursor-canvas"></canvas>
+<div class="cursor-dot" id="cursorDot"></div>
+
+<!-- ============ LANDING ============ -->
+<div id="landing">
+  <canvas id="landing-canvas"></canvas>
+  <div class="landing-inner">
+    <div class="eyebrow" style="justify-content:center; margin-bottom:1.4rem;">A TIME MACHINE, NOT A TIMELINE</div>
+    <h1 class="landing-title">INTERNET<br><span class="l2">THROUGH TIME</span></h1>
+    <p class="landing-sub">Explore how the digital world became the world we know today.</p>
+    <button class="enter-btn" id="enterBtn">ENTER THE INTERNET →</button>
+    <div class="landing-hint">Scroll · Click · Explore · Find secrets</div>
+  </div>
+</div>
+
+<div id="boot-screen">
+  <div id="boot-lines">
+    <div>&gt; CONNECTING TO THE INTERNET...</div>
+    <div>&gt; ESTABLISHING TIMELINE...</div>
+    <div>&gt; CONNECTION SECURE</div>
+    <div>&gt; ACCESS GRANTED <span class="boot-cursor"></span></div>
+  </div>
+</div>
+
+<!-- ============ NAV ============ -->
+<nav id="topnav">
+  <div class="nav-left">
+    <div class="brand"><span class="brand-dot"></span> INTERNET/TIME</div>
+    <div class="nav-links">
+      <a href="#landing-anchor" data-jump="top">HOME</a>
+      <a href="#era-1960s" data-jump="timeline">TIMELINE</a>
+      <a href="#world">WORLD</a>
+      <a href="#discoveries">DISCOVERIES</a>
+      <a href="#about">ABOUT</a>
+    </div>
+  </div>
+  <div class="nav-right">
+    <div class="era-badge" id="eraBadge">CURRENT ERA: —</div>
+    <button class="icon-btn" id="soundBtn" title="Toggle sound">🔊</button>
+  </div>
+</nav>
+
+<div id="timeline-rail">
+  <div class="rail-track" id="railTrack"></div>
+</div>
+
+<div id="hud">
+  <h4>DISCOVERY LOG</h4>
+  <div class="hud-row"><span>ERAS</span><b id="hudEras">0/8</b></div>
+  <div class="hud-row"><span>OBJECTS</span><b id="hudObjects">0/0</b></div>
+  <div class="hud-row"><span>SECRETS</span><b id="hudSecrets">0/0</b></div>
+  <div class="hud-row"><span>EXPLORATION</span><b id="hudPct">0%</b></div>
+  <div class="hud-bar"><i id="hudBar"></i></div>
+</div>
+
+<button class="reduce-motion-toggle" id="reduceBtn">Reduce Motion: Off</button>
+
+<!-- ============ MAIN ============ -->
+<main id="landing-anchor">
+
+  <!-- 1960s -->
+  <section class="era" id="era-1960s" data-era="1960s" data-title="The Beginning" style="--glow:#33ff8c;">
+    <div class="grid-bg"></div><div class="era-glow"></div>
+    <div class="era-inner">
+      <div class="era-head">
+        <div class="eyebrow" style="justify-content:center;">01 / EARLY NETWORKING</div>
+        <div class="era-year">1960s</div>
+        <div class="era-title">The Beginning</div>
+        <p class="era-blurb">Room-sized mainframes learn to talk to each other for the first time. Click each machine to see how the first network came alive.</p>
+      </div>
+      <div class="object-field" data-field="1960s">
+        <div class="obj" data-obj="mainframe" data-title="The Mainframe" data-icon="🖥️" data-desc="Massive machines filling entire rooms, mainframes were the only computers powerful enough to be worth connecting. Universities and research labs shared costly processing time between them.">
+          <div class="glyph">🖥️</div><div class="label">Mainframe</div>
+        </div>
+        <div class="obj" data-obj="cables" data-title="Network Cables" data-icon="🔌" data-desc="Early links used leased telephone lines and custom modems, moving data at what today feels like a crawl — but at the time, it was revolutionary.">
+          <div class="glyph">🔌</div><div class="label">Cables</div>
+        </div>
+        <div class="obj" data-obj="terminal" data-title="The Terminal" data-icon="⌨️" data-desc="Researchers typed commands directly into a terminal connected to a distant machine — the first taste of using a computer that wasn't in the same room as you.">
+          <div class="glyph">⌨️</div><div class="label">Terminal</div>
+        </div>
+        <div class="obj" data-obj="packets" data-title="Data Packets" data-icon="📦" data-desc="Instead of sending information as one long stream, engineers split it into small packets that could travel independently and reassemble at the destination — the core idea behind ARPANET.">
+          <div class="glyph">📦</div><div class="label">Packets</div>
+        </div>
+      </div>
+      <svg class="net-svg" id="net1960"></svg>
+    </div>
+  </section>
+
+  <!-- 1970s -->
+  <section class="era" id="era-1970s" data-era="1970s" data-title="Networking" style="--glow:#2de2c8;">
+    <div class="grid-bg"></div><div class="era-glow"></div>
+    <div class="era-inner">
+      <div class="era-head">
+        <div class="eyebrow" style="justify-content:center;">02 / THE NETWORK LAB</div>
+        <div class="era-year">1970s</div>
+        <div class="era-title">Networking</div>
+        <p class="era-blurb">A handful of computers, wired together, learning a shared language. Toggle a connection and watch a packet travel across the lab.</p>
+      </div>
+      <div class="object-field" data-field="1970s">
+        <div class="obj" data-obj="nodeA" data-title="Node: Stanford" data-icon="🟢" data-desc="One of the first four nodes on ARPANET. Each node ran its own operating system, yet all could exchange data using a shared protocol.">
+          <div class="glyph">🟢</div><div class="label">Node A</div>
+        </div>
+        <div class="obj" data-obj="nodeB" data-title="Node: UCLA" data-icon="🔵" data-desc="UCLA sent the very first message across ARPANET in 1969 — the system crashed after just two letters, 'LO' of 'LOGIN'.">
+          <div class="glyph">🔵</div><div class="label">Node B</div>
+        </div>
+        <div class="obj" data-obj="protocol" data-title="TCP/IP is Born" data-icon="🧩" data-desc="In the 1970s, engineers designed TCP/IP — a common set of rules letting completely different networks talk to one another. It's still the backbone of the Internet today.">
+          <div class="glyph">🧩</div><div class="label">Protocol</div>
+        </div>
+        <div class="obj" data-obj="email" data-title="Email Appears" data-icon="✉️" data-desc="The @ symbol was chosen to separate a user from their machine, and electronic mail quickly became the network's most popular use.">
+          <div class="glyph">✉️</div><div class="label">Email</div>
+        </div>
+      </div>
+      <svg class="net-svg" id="net1970"></svg>
+    </div>
+  </section>
+
+  <!-- 1980s -->
+  <section class="era" id="era-1980s" data-era="1980s" data-title="Personal Computers" style="--glow:#ff2ea6;">
+    <div class="grid-bg"></div><div class="era-glow"></div>
+    <div class="era-inner">
+      <div class="era-head">
+        <div class="eyebrow" style="justify-content:center;">03 / THE DESKTOP</div>
+        <div class="era-year">1980s</div>
+        <div class="era-title">Personal Computers</div>
+        <p class="era-blurb">The computer leaves the lab and lands on a desk. Explore this retro desktop — and see if you can find what's hiding in the corner.</p>
+      </div>
+      <div class="object-field" data-field="1980s">
+        <div class="obj" data-obj="folder" data-title="Folder" data-icon="📁" data-desc="The graphical 'desktop metaphor' — folders, files, a trash can — made computers usable by people who had never touched one before.">
+          <div class="glyph">📁</div><div class="label">Folder</div>
+        </div>
+        <div class="obj" data-obj="floppy" data-title="Floppy Disk" data-icon="💾" data-desc="A 3.5-inch floppy held about 1.44MB — enough for a handful of documents. Software shipped on stacks of these little squares." id="floppyObj">
+          <div class="glyph">💾</div><div class="label">Floppy Disk</div>
+        </div>
+        <div class="obj" data-obj="pc" data-title="Personal Computer" data-icon="🖥️" data-desc="Machines like the IBM PC and Macintosh brought computing into homes and small offices for the first time, at a price ordinary people could reach.">
+          <div class="glyph">🖥️</div><div class="label">Computer</div>
+        </div>
+        <div class="obj" data-obj="doc" data-title="Document" data-icon="📄" data-desc="Word processors replaced typewriters — text could finally be edited, saved, and reprinted without starting over.">
+          <div class="glyph">📄</div><div class="label">Document</div>
+        </div>
+        <div class="obj" data-obj="keyboard" data-title="Keyboard" data-icon="⌨️" data-desc="Mechanical keyboards of the era had a satisfying clack — and were often the only input device most PCs shipped with.">
+          <div class="glyph">⌨️</div><div class="label">Keyboard</div>
+        </div>
+      </div>
+      <div id="hiddenPixel" title="?" style="position:absolute; width:14px; height:14px; right:8%; bottom:10%; cursor:pointer; z-index:5; opacity:.15; background:var(--accent); border-radius:50%;"></div>
+    </div>
+  </section>
+
+  <!-- 1990s -->
+  <section class="era" id="era-1990s" data-era="1990s" data-title="The Web Arrives" style="--glow:#3aa0ff;">
+    <div class="grid-bg"></div><div class="era-glow"></div>
+    <div class="era-inner">
+      <div class="era-head">
+        <div class="eyebrow" style="justify-content:center;">04 / DIAL-UP</div>
+        <div class="era-year">1990s</div>
+        <div class="era-title">The Web Arrives</div>
+        <p class="era-blurb">Plug in the modem, wait for that unmistakable screech, and step into the World Wide Web for the first time.</p>
+      </div>
+      <button class="connect-btn" id="connectBtn">CONNECT</button>
+      <div id="modem-status"></div>
+      <div class="browser-shell" id="browserShell" style="display:none;">
+        <div class="browser-bar">
+          <div class="browser-dot" style="background:#ff5f57;"></div>
+          <div class="browser-dot" style="background:#febc2e;"></div>
+          <div class="browser-dot" style="background:#28c840;"></div>
+          <div class="browser-url">http://www.homepage.net</div>
+        </div>
+        <div class="browser-body" id="browserBody">
+          <div class="eyebrow">WELCOME TO THE WEB</div>
+          <p style="margin-top:.8rem;">You are visitor number <b style="color:var(--accent);">004217</b> to this page. Click a link below to explore the early web.</p>
+          <div class="browser-links">
+            <a href="#" data-page="search">🔍 Search Engine</a>
+            <a href="#" data-page="guestbook">📖 Guestbook</a>
+            <a href="#" data-page="chat">💬 Chat Room</a>
+            <a href="#" data-page="secret">✨ ???</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2000s -->
+  <section class="era" id="era-2000s" data-era="2000s" data-title="Web 2.0" style="--glow:#ffb020;">
+    <div class="grid-bg"></div><div class="era-glow"></div>
+    <div class="era-inner">
+      <div class="era-head">
+        <div class="eyebrow" style="justify-content:center;">05 / THE READ-WRITE WEB</div>
+        <div class="era-year">2000s</div>
+        <div class="era-title">Web 2.0</div>
+        <p class="era-blurb">The web stops being something you only read — and becomes something you help build. Open a window to explore each platform.</p>
+      </div>
+      <div class="object-field" data-field="2000s">
+        <div class="obj" data-obj="search" data-title="Search Engines" data-icon="🔍" data-desc="A simple ranking algorithm changed everything: instead of browsing directories, people could just ask a question and get an answer instantly.">
+          <div class="glyph">🔍</div><div class="label">Search</div>
+        </div>
+        <div class="obj" data-obj="forums" data-title="Forums" data-icon="💬" data-desc="Online forums became the internet's town squares — communities built entirely around shared interests, from gaming to gardening.">
+          <div class="glyph">💬</div><div class="label">Forums</div>
+        </div>
+        <div class="obj" data-obj="blogs" data-title="Blogs" data-icon="📝" data-desc="Publishing your thoughts no longer needed a newspaper — anyone with a browser could become a writer, and millions did.">
+          <div class="glyph">📝</div><div class="label">Blogs</div>
+        </div>
+        <div class="obj" data-obj="video" data-title="Video Sites" data-icon="🎬" data-desc="Uploading and streaming video became simple for the first time, turning ordinary people into broadcasters overnight.">
+          <div class="glyph">🎬</div><div class="label">Video</div>
+        </div>
+        <div class="obj" data-obj="social" data-title="Social Networking" data-icon="👥" data-desc="Profiles, friend lists, and news feeds reshaped how people kept in touch — and how they presented themselves to the world.">
+          <div class="glyph">👥</div><div class="label">Social</div>
+        </div>
+        <div class="obj" data-obj="gaming" data-title="Online Gaming" data-icon="🎮" data-desc="Broadband made it possible to play against — and with — strangers anywhere in the world, in real time.">
+          <div class="glyph">🎮</div><div class="label">Gaming</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2010s -->
+  <section class="era" id="era-2010s" data-era="2010s" data-title="The Mobile Internet" style="--glow:#7b61ff;">
+    <div class="grid-bg"></div><div class="era-glow"></div>
+    <div class="era-inner">
+      <div class="era-head">
+        <div class="eyebrow" style="justify-content:center;">06 / IN YOUR POCKET</div>
+        <div class="era-year">2010s</div>
+        <div class="era-title">The Mobile Internet</div>
+        <p class="era-blurb">The internet leaves the desk for good. Tap an app on the phone below to see how mobile changed everything.</p>
+      </div>
+      <div class="phone-wrap">
+        <div class="phone" data-field="2010s">
+          <div class="app" data-obj="camera" data-title="Camera" data-icon="📷" data-desc="Phone cameras made photography instant and constant — billions of images are now shared online every single day."><span>📷</span><span>Camera</span></div>
+          <div class="app" data-obj="messaging" data-title="Messaging" data-icon="💬" data-desc="Free, instant messaging apps made SMS fees feel ancient almost overnight, connecting people across the globe for free."><span>💬</span><span>Messages</span></div>
+          <div class="app" data-obj="browser" data-title="Mobile Browser" data-icon="🌐" data-desc="Websites had to shrink, stack and simplify — 'mobile-first' design became the new default for the entire web."><span>🌐</span><span>Browser</span></div>
+          <div class="app" data-obj="music" data-title="Streaming Music" data-icon="🎵" data-desc="Owning music gave way to streaming it — an entire library, on demand, anywhere you had signal."><span>🎵</span><span>Music</span></div>
+          <div class="app" data-obj="video2" data-title="Video Streaming" data-icon="▶️" data-desc="High-speed mobile data made watching video on the go completely normal, reshaping how entertainment gets made and found."><span>▶️</span><span>Video</span></div>
+          <div class="app" data-obj="email2" data-title="Email" data-icon="📧" data-desc="Push notifications meant your inbox was now always in your pocket — for better and for worse."><span>📧</span><span>Email</span></div>
+          <div class="app" data-obj="socialapp" data-title="Social Media" data-icon="📱" data-desc="Apps built specifically for phones — feeds, stories, likes — became the way an entire generation experienced the internet."><span>📱</span><span>Social</span></div>
+          <div class="app" data-obj="maps" data-title="Maps & GPS" data-icon="🗺️" data-desc="A phone in your pocket could now tell you exactly where you were — and how to get anywhere else."><span>🗺️</span><span>Maps</span></div>
+          <div class="app" data-obj="appstore" data-title="App Store" data-icon="🛒" data-desc="A single marketplace let anyone install new software in seconds, spawning an entirely new app economy."><span>🛒</span><span>Apps</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2020s -->
+  <section class="era" id="era-2020s" data-era="2020s" data-title="The Connected World" style="--glow:#00e5ff;">
+    <div class="grid-bg"></div><div class="era-glow"></div>
+    <div class="era-inner">
+      <div class="era-head">
+        <div class="eyebrow" style="justify-content:center;">07 / EVERYTHING ONLINE</div>
+        <div class="era-year">2020s</div>
+        <div class="era-title">The Connected World</div>
+        <p class="era-blurb">Devices, homes, and intelligence itself connect to the cloud. Explore each node in today's always-on world.</p>
+      </div>
+      <div class="object-field" data-field="2020s">
+        <div class="obj" data-obj="cloud" data-title="Cloud Computing" data-icon="☁️" data-desc="Instead of running on your device, huge amounts of computing now happen in remote data centers — the 'cloud' behind almost every app you use.">
+          <div class="glyph">☁️</div><div class="label">Cloud</div>
+        </div>
+        <div class="obj" data-obj="ai" data-title="Artificial Intelligence" data-icon="🤖" data-desc="Machine learning models, trained on the internet's vast archive of text and images, began writing, drawing, and reasoning alongside people.">
+          <div class="glyph">🤖</div><div class="label">AI</div>
+        </div>
+        <div class="obj" data-obj="fiveg" data-title="5G Networks" data-icon="📡" data-desc="Faster, lower-latency wireless networks made real-time applications — from cloud gaming to remote surgery — genuinely possible.">
+          <div class="glyph">📡</div><div class="label">5G</div>
+        </div>
+        <div class="obj" data-obj="cyber" data-title="Cybersecurity" data-icon="🔐" data-desc="As more of life moved online, protecting it became a discipline of its own — encryption, zero-trust networks, and constant vigilance.">
+          <div class="glyph">🔐</div><div class="label">Security</div>
+        </div>
+        <div class="obj" data-obj="streaming" data-title="Streaming" data-icon="🎬" data-desc="Entire industries — film, TV, music — rebuilt themselves around instant, on-demand delivery over the internet.">
+          <div class="glyph">🎬</div><div class="label">Streaming</div>
+        </div>
+        <div class="obj" data-obj="platforms" data-title="Social Platforms" data-icon="🌐" data-desc="A handful of platforms now mediate how billions of people communicate, get news, and form communities.">
+          <div class="glyph">🌐</div><div class="label">Platforms</div>
+        </div>
+        <div class="obj" data-obj="iot" data-title="Internet of Things" data-icon="🏠" data-desc="Thermostats, doorbells, lightbulbs and fridges quietly joined the internet — everyday objects, now online.">
+          <div class="glyph">🏠</div><div class="label">IoT</div>
+        </div>
+      </div>
+      <svg class="net-svg" id="net2020"></svg>
+    </div>
+  </section>
+
+  <!-- FUTURE -->
+  <section class="era" id="era-future" data-era="Future" data-title="2050+" style="--glow:#bfe8ff;">
+    <div class="grid-bg"></div><div class="era-glow"></div>
+    <div class="era-inner">
+      <div class="era-head">
+        <div class="eyebrow" style="justify-content:center;">08 / WHAT COMES NEXT</div>
+        <div class="era-year">FUTURE</div>
+        <div class="era-title">2050 and beyond</div>
+        <p class="era-blurb">Step into a speculative city where the internet has become almost invisible — woven into buildings, vehicles and even orbit itself.</p>
+      </div>
+      <div class="object-field" data-field="future">
+        <div class="obj" data-obj="smartcity" data-title="Smart City" data-icon="🏙️" data-desc="Traffic, power and water systems could coordinate in real time, quietly optimizing an entire city the way a single computer optimizes a program.">
+          <div class="glyph">🏙️</div><div class="label">Smart City</div>
+        </div>
+        <div class="obj" data-obj="assistant" data-title="AI Assistant" data-icon="🤖" data-desc="Ambient, always-available AI could become less like an app you open and more like a companion woven into daily life.">
+          <div class="glyph">🤖</div><div class="label">AI Assistant</div>
+        </div>
+        <div class="obj" data-obj="autotrans" data-title="Autonomous Transport" data-icon="🚗" data-desc="Vehicles that talk to each other and to city infrastructure could make traffic jams and accidents dramatically rarer.">
+          <div class="glyph">🚗</div><div class="label">Auto Transport</div>
+        </div>
+        <div class="obj" data-obj="arvr" data-title="AR / VR" data-icon="🥽" data-desc="Digital information could be layered directly onto the physical world, blurring the line between browsing and simply looking around.">
+          <div class="glyph">🥽</div><div class="label">AR/VR</div>
+        </div>
+        <div class="obj" data-obj="smarthome" data-title="Smart Homes" data-icon="🏠" data-desc="Homes that sense, adjust and anticipate could make 'going online' feel as invisible as flipping on a light.">
+          <div class="glyph">🏠</div><div class="label">Smart Home</div>
+        </div>
+        <div class="obj" data-obj="satellite" data-title="Satellite Internet" data-icon="🛰️" data-desc="Vast constellations of low-orbit satellites are already bringing connectivity to places fiber cable will never reach.">
+          <div class="glyph">🛰️</div><div class="label">Satellite</div>
+        </div>
+        <div class="obj" data-obj="space" data-title="Space Internet" data-icon="🌌" data-desc="As missions push further from Earth, delay-tolerant networking is being designed to let data hop between planets, not just continents.">
+          <div class="glyph">🌌</div><div class="label">Space Net</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- WORLD MAP -->
+  <section class="era" id="world" data-era="World" data-title="Around the World" style="--glow:#2de2c8; min-height:auto; padding-bottom:7rem;">
+    <div class="grid-bg"></div>
+    <div class="era-inner">
+      <div class="era-head">
+        <div class="eyebrow" style="justify-content:center;">GLOBAL VIEW</div>
+        <div class="era-year" style="font-size:clamp(1.8rem,5vw,3rem);">INTERNET AROUND THE WORLD</div>
+        <p class="era-blurb">A slowly spinning signal map. Click a glowing point to learn about that region's role in internet history.</p>
+      </div>
+      <div id="world-map-wrap">
+        <div class="globe">
+          <div class="globe-grid" id="globeGrid">
+            <svg viewBox="0 0 100 100">
+              <g stroke="rgba(255,255,255,.12)" fill="none">
+                <ellipse cx="50" cy="50" rx="48" ry="48"/>
+                <ellipse cx="50" cy="50" rx="48" ry="20"/>
+                <ellipse cx="50" cy="50" rx="48" ry="34"/>
+                <line x1="2" y1="50" x2="98" y2="50"/>
+                <line x1="50" y1="2" x2="50" y2="98"/>
+                <ellipse cx="50" cy="50" rx="20" ry="48"/>
+                <ellipse cx="50" cy="50" rx="34" ry="48"/>
+              </g>
+            </svg>
+          </div>
+          <div id="markerLayer"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DISCOVERIES -->
+  <section class="era" id="discoveries" data-era="Discoveries" data-title="Discoveries" style="min-height:auto; padding-bottom:7rem;">
+    <div class="grid-bg"></div>
+    <div class="era-inner">
+      <div class="era-head">
+        <div class="eyebrow" style="justify-content:center;">PROGRESS LOG</div>
+        <div class="era-year" style="font-size:clamp(1.8rem,5vw,3rem);">DISCOVERIES</div>
+        <p class="era-blurb">Everything you've found on your journey through time, saved automatically to this device.</p>
+      </div>
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-num" id="statEras">0/8</div><div class="stat-lbl">Eras Discovered</div></div>
+        <div class="stat-card"><div class="stat-num" id="statObjects">0/0</div><div class="stat-lbl">Objects Discovered</div></div>
+        <div class="stat-card"><div class="stat-num" id="statSecrets">0/0</div><div class="stat-lbl">Secret Items Found</div></div>
+        <div class="stat-card"><div class="stat-num" id="statPct">0%</div><div class="stat-lbl">Exploration</div></div>
+      </div>
+      <div id="secrets-list"></div>
+    </div>
+  </section>
+
+  <!-- ABOUT -->
+  <section class="era" id="about" data-era="About" data-title="About" style="min-height:auto;">
+    <div class="grid-bg"></div>
+    <div class="era-inner">
+      <div class="era-head">
+        <div class="eyebrow" style="justify-content:center;">ABOUT THIS EXPERIENCE</div>
+        <div class="era-year" style="font-size:clamp(1.8rem,5vw,3rem);">A TIME MACHINE FOR THE WEB</div>
+        <p class="era-blurb">Internet Through Time is an interactive journey across eight decades of networking history — built to be explored, not just read. Scroll, click, drag, and hunt for secrets hidden throughout the experience.</p>
+      </div>
+      <div class="credit-card">
+        <div class="eyebrow" style="justify-content:center; margin-bottom:.6rem;">MADE BY</div>
+        <div class="name">Sarthak Mehta</div>
+        <div class="meta">
+          <a href="mailto:sarthakmehta.wca@gmail.com">sarthakmehta.wca@gmail.com</a>
+          
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- panel -->
+<div id="panel-backdrop">
+  <div id="panel">
+    <div class="panel-bar"><span id="panelEyebrow">OBJECT INFO</span><button class="panel-close" id="panelClose">✕</button></div>
+    <div class="panel-body">
+      <h3 id="panelTitle"></h3>
+      <p id="panelDesc"></p>
+    </div>
+  </div>
+</div>
+
+<div id="secret-toast">🔓 <span id="secretText">SECRET DISCOVERED</span></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script>
+gsap.registerPlugin(ScrollTrigger);
+
+/* ============================================================
+   STATE / STORAGE
+   ============================================================ */
+const ERAS = ['1960s','1970s','1980s','1990s','2000s','2010s','2020s','Future'];
+const TOTAL_SECRETS = 10;
+let progress = JSON.parse(localStorage.getItem('itt_progress') || '{}');
+progress.eras = new Set(progress.eras || []);
+progress.objects = new Set(progress.objects || []);
+progress.secrets = new Set(progress.secrets || []);
+
+function saveProgress(){
+  localStorage.setItem('itt_progress', JSON.stringify({
+    eras:[...progress.eras], objects:[...progress.objects], secrets:[...progress.secrets]
+  }));
+  renderHUD();
+}
+
+const ALL_OBJECT_IDS = Array.from(document.querySelectorAll('[data-obj]')).map(el=>el.dataset.obj);
+const TOTAL_OBJECTS = new Set(ALL_OBJECT_IDS).size;
+
+function markEra(era){ if(!progress.eras.has(era)){ progress.eras.add(era); saveProgress(); } }
+function markObject(id){ if(!progress.objects.has(id)){ progress.objects.add(id); saveProgress(); document.querySelectorAll('[data-obj="'+id+'"]').forEach(e=>e.classList.add('discovered')); } }
+function markSecret(id, label){
+  if(!progress.secrets.has(id)){
+    progress.secrets.add(id); saveProgress();
+    showSecretToast(label || id);
+    playSecret();
+  }
+}
+
+function renderHUD(){
+  const e = progress.eras.size, o = progress.objects.size, s = progress.secrets.size;
+  const pct = Math.round(((e/8) + (o/Math.max(TOTAL_OBJECTS,1)) + (s/TOTAL_SECRETS)) / 3 * 100);
+  document.getElementById('hudEras').textContent = e+'/8';
+  document.getElementById('hudObjects').textContent = o+'/'+TOTAL_OBJECTS;
+  document.getElementById('hudSecrets').textContent = s+'/'+TOTAL_SECRETS;
+  document.getElementById('hudPct').textContent = pct+'%';
+  document.getElementById('hudBar').style.width = pct+'%';
+  document.getElementById('statEras').textContent = e+'/8';
+  document.getElementById('statObjects').textContent = o+'/'+TOTAL_OBJECTS;
+  document.getElementById('statSecrets').textContent = s+'/'+TOTAL_SECRETS;
+  document.getElementById('statPct').textContent = pct+'%';
+  renderSecretsList();
+  // mark discovered objects visually
+  progress.objects.forEach(id=>document.querySelectorAll('[data-obj="'+id+'"]').forEach(e=>e.classList.add('discovered')));
+}
+
+const SECRET_NAMES = {
+  floppy5:'Floppy Fanatic', typed1995:'Time Traveler: 1995', typed404:'Lost Page', dblMainframe:'Deep Diagnostics',
+  hiddenPixel:'Pixel Hunter', konami:'Developer Mode', sarthakWord:'Creator Found', soundSpam:'Signal Overload',
+  logoClicks:'Boot Loop', secretPage:'Hidden Page'
+};
+function renderSecretsList(){
+  const wrap = document.getElementById('secrets-list');
+  wrap.innerHTML = '';
+  Object.keys(SECRET_NAMES).forEach(key=>{
+    const found = progress.secrets.has(key);
+    const chip = document.createElement('div');
+    chip.className = 'secret-chip'+(found?' found':'');
+    chip.textContent = found ? ('🔓 '+SECRET_NAMES[key]) : '🔒 ???';
+    wrap.appendChild(chip);
+  });
+}
+
+function showSecretToast(label){
+  document.getElementById('secretText').textContent = 'SECRET DISCOVERED: ' + label;
+  const t = document.getElementById('secret-toast');
+  t.classList.add('show');
+  clearTimeout(window._secretTimer);
+  window._secretTimer = setTimeout(()=>t.classList.remove('show'), 3200);
+}
+
+/* ============================================================
+   AUDIO (synthesized, no external files)
+   ============================================================ */
+let audioCtx = null;
+let soundOn = localStorage.getItem('itt_sound') !== 'off';
+function ctx(){ if(!audioCtx){ audioCtx = new (window.AudioContext||window.webkitAudioContext)(); } return audioCtx; }
+function beep(freq=440, dur=.09, type='sine', vol=.06, delay=0){
+  if(!soundOn) return;
+  const c = ctx(); const t0 = c.currentTime + delay;
+  const o = c.createOscillator(); const g = c.createGain();
+  o.type = type; o.frequency.setValueAtTime(freq, t0);
+  g.gain.setValueAtTime(0, t0);
+  g.gain.linearRampToValueAtTime(vol, t0+.01);
+  g.gain.exponentialRampToValueAtTime(.0001, t0+dur);
+  o.connect(g); g.connect(c.destination);
+  o.start(t0); o.stop(t0+dur+.02);
+}
+function playClick(){ beep(720,.06,'square',.04); }
+function playOpen(){ beep(500,.08,'sine',.05); beep(760,.08,'sine',.04,.05); }
+function playSecret(){ [520,660,880,1040].forEach((f,i)=>beep(f,.14,'triangle',.06,i*.09)); }
+function playModem(){
+  if(!soundOn) return;
+  const seq = [300,900,500,1200,700,1500,400,1100];
+  seq.forEach((f,i)=>beep(f,.11,'sawtooth',.035,i*.13));
+}
+function playType(){ beep(1000+Math.random()*400,.02,'square',.02); }
+
+const soundBtn = document.getElementById('soundBtn');
+function refreshSoundBtn(){ soundBtn.textContent = soundOn ? '🔊' : '🔇'; }
+refreshSoundBtn();
+let soundClickCount = 0, soundClickTimer = null;
+soundBtn.addEventListener('click', ()=>{
+  soundOn = !soundOn;
+  localStorage.setItem('itt_sound', soundOn ? 'on':'off');
+  refreshSoundBtn();
+  if(soundOn) beep(660,.08,'sine',.05);
+  soundClickCount++;
+  clearTimeout(soundClickTimer);
+  soundClickTimer = setTimeout(()=>soundClickCount=0, 1600);
+  if(soundClickCount>=7) markSecret('soundSpam', SECRET_NAMES.soundSpam);
+});
+
+/* ============================================================
+   LANDING + BOOT SEQUENCE
+   ============================================================ */
+const landing = document.getElementById('landing');
+const bootScreen = document.getElementById('boot-screen');
+const enterBtn = document.getElementById('enterBtn');
+let logoClicks = 0;
+document.querySelector('.landing-title').addEventListener('click', ()=>{
+  logoClicks++;
+  if(logoClicks>=10) markSecret('logoClicks', SECRET_NAMES.logoClicks);
+});
+
+enterBtn.addEventListener('click', ()=>{
+  ctx(); // unlock audio on gesture
+  playOpen();
+  landing.classList.add('hidden');
+  bootScreen.classList.add('active');
+  const lines = bootScreen.querySelectorAll('#boot-lines div');
+  lines.forEach((l,i)=>{
+    gsap.to(l, {opacity:1, duration:.15, delay:i*.55, onStart:()=>beep(500+i*90,.05,'square',.03)});
+  });
+  setTimeout(()=>{
+    bootScreen.style.transition = 'opacity .6s ease';
+    bootScreen.style.opacity = 0;
+    setTimeout(()=>{
+      bootScreen.classList.remove('active');
+      bootScreen.style.opacity = 1;
+      document.body.classList.remove('locked');
+      revealChrome();
+      ScrollTrigger.refresh();
+    }, 620);
+  }, lines.length*550 + 500);
+});
+
+function revealChrome(){
+  document.getElementById('topnav').classList.add('show');
+  document.getElementById('timeline-rail').classList.add('show');
+  document.getElementById('hud').classList.add('show');
+  document.getElementById('reduceBtn').classList.add('show');
+}
+
+/* ============================================================
+   TIMELINE RAIL
+   ============================================================ */
+const railTrack = document.getElementById('railTrack');
+const eraSections = Array.from(document.querySelectorAll('.era[data-era]'));
+const mainEras = ERAS; // 1960s..Future for rail
+
+mainEras.forEach(era=>{
+  const node = document.createElement('div');
+  node.className = 'rail-node';
+  node.dataset.era = era;
+  node.innerHTML = '<div class="rail-dot"></div><div>'+era.toUpperCase()+'</div>';
+  node.addEventListener('click', ()=>{
+    playClick();
+    const target = document.getElementById('era-'+era.toLowerCase());
+    if(target) target.scrollIntoView({behavior:'smooth'});
+  });
+  railTrack.appendChild(node);
+});
+
+function setActiveEra(name){
+  document.getElementById('eraBadge').textContent = 'CURRENT ERA: '+name.toUpperCase();
+  document.querySelectorAll('.rail-node').forEach(n=>{
+    n.classList.toggle('active', n.dataset.era===name);
+    if(n.dataset.era===name) n.classList.add('visited');
+  });
+}
+
+/* ============================================================
+   SCROLL-DRIVEN ERA TRACKING (GSAP ScrollTrigger)
+   ============================================================ */
+eraSections.forEach(sec=>{
+  ScrollTrigger.create({
+    trigger:sec, start:'top center', end:'bottom center',
+    onEnter:()=>{ setActiveEra(sec.dataset.era); if(ERAS.includes(sec.dataset.era)) markEra(sec.dataset.era); },
+    onEnterBack:()=>{ setActiveEra(sec.dataset.era); if(ERAS.includes(sec.dataset.era)) markEra(sec.dataset.era); }
+  });
+  // reveal objects on scroll
+  gsap.utils.toArray(sec.querySelectorAll('.obj, .app, .connect-btn, .browser-shell')).forEach((el,i)=>{
+    gsap.fromTo(el, {opacity:0, y:26}, {
+      opacity:1, y:0, duration:.6, ease:'power2.out', delay:(i%9)*.04,
+      scrollTrigger:{ trigger:sec, start:'top 70%' }
+    });
+  });
+});
+
+/* ============================================================
+   INFO PANEL (delegated to all [data-obj])
+   ============================================================ */
+const panelBackdrop = document.getElementById('panel-backdrop');
+const panelTitle = document.getElementById('panelTitle');
+const panelDesc = document.getElementById('panelDesc');
+const panelEyebrow = document.getElementById('panelEyebrow');
+
+function openInfoPanel(el){
+  playOpen();
+  panelEyebrow.textContent = (el.closest('[data-field]')?.dataset.field || '').toUpperCase() || 'OBJECT INFO';
+  panelTitle.textContent = el.dataset.title || 'Untitled';
+  panelDesc.textContent = el.dataset.desc || '';
+  panelBackdrop.classList.add('show');
+  if(el.dataset.obj) markObject(el.dataset.obj);
+}
+document.getElementById('panelClose').addEventListener('click', ()=>panelBackdrop.classList.remove('show'));
+panelBackdrop.addEventListener('click', e=>{ if(e.target===panelBackdrop) panelBackdrop.classList.remove('show'); });
+
+document.addEventListener('click', e=>{
+  const el = e.target.closest('[data-obj]');
+  if(el) openInfoPanel(el);
+});
+
+/* floppy disk easter egg: 5 rapid clicks */
+let floppyCount = 0, floppyTimer = null;
+document.getElementById('floppyObj').addEventListener('click', ()=>{
+  floppyCount++;
+  clearTimeout(floppyTimer);
+  floppyTimer = setTimeout(()=>floppyCount=0, 1400);
+  if(floppyCount>=5) markSecret('floppy5', SECRET_NAMES.floppy5);
+});
+
+/* mainframe double click easter egg */
+document.querySelector('[data-obj="mainframe"]').addEventListener('dblclick', ()=>{
+  markSecret('dblMainframe', SECRET_NAMES.dblMainframe);
+});
+
+/* hidden pixel easter egg (1980s) */
+document.getElementById('hiddenPixel').addEventListener('click', ()=>{
+  markSecret('hiddenPixel', SECRET_NAMES.hiddenPixel);
+});
+
+/* ============================================================
+   1990s: CONNECT / DIAL-UP / BROWSER SIM
+   ============================================================ */
+const connectBtn = document.getElementById('connectBtn');
+const modemStatus = document.getElementById('modem-status');
+const browserShell = document.getElementById('browserShell');
+const browserBody = document.getElementById('browserBody');
+let connected = false;
+connectBtn.addEventListener('click', ()=>{
+  if(connected) return;
+  playModem();
+  const steps = ['Dialing 1-800-NET-DIAL...','Handshaking with server...','░▒▓ SCREEEECH ▓▒░','Negotiating 56k connection...','Connected at 28.8kbps.'];
+  connectBtn.disabled = true; connectBtn.style.opacity = .5;
+  steps.forEach((s,i)=>{
+    setTimeout(()=>{ modemStatus.textContent = s; }, i*650);
+  });
+  setTimeout(()=>{
+    browserShell.style.display='block';
+    connected = true;
+    connectBtn.style.display='none';
+    markObject('modem');
+    gsap.fromTo(browserShell, {opacity:0,y:20},{opacity:1,y:0,duration:.5});
+  }, steps.length*650 + 200);
+});
+browserBody.addEventListener('click', e=>{
+  const a = e.target.closest('[data-page]');
+  if(!a) return;
+  e.preventDefault();
+  playClick();
+  const pages = {
+    search:'<div class="eyebrow">SEARCH ENGINE</div><p style="margin-top:.7rem;">A simple text box promises to search "the entire web." Results load one line at a time, sorted mostly by luck.</p>',
+    guestbook:'<div class="eyebrow">GUESTBOOK</div><p style="margin-top:.7rem;">"Cool site! Sign my guestbook too! — xXcyber_kidXx, 1997"</p>',
+    chat:'<div class="eyebrow">CHAT ROOM</div><p style="margin-top:.7rem;">&lt;user42&gt; asl?<br>&lt;user17&gt; lol brb mom needs the phone</p>',
+    secret:'<div class="eyebrow">??? PAGE FOUND</div><p style="margin-top:.7rem;">You found a hidden page. Nice exploring.</p>'
+  };
+  browserBody.innerHTML = pages[a.dataset.page] + '<div class="browser-links" style="margin-top:1.2rem;"><a href="#" id="backHome">← Back to Homepage</a></div>';
+  if(a.dataset.page==='secret') markSecret('secretPage', SECRET_NAMES.secretPage);
+  document.getElementById('backHome').addEventListener('click', e=>{
+    e.preventDefault();
+    location.reload();
+  });
+});
+
+/* ============================================================
+   NETWORK LINE ANIMATIONS (canvas-free, simple SVG packets)
+   ============================================================ */
+function buildNetSVG(svgEl, count){
+  if(!svgEl) return;
+  const w = svgEl.clientWidth || 800, h = svgEl.clientHeight || 400;
+  svgEl.setAttribute('viewBox','0 0 '+w+' '+h);
+  const pts = [];
+  for(let i=0;i<count;i++){
+    pts.push([Math.random()*w, Math.random()*h*0.6 + h*0.2]);
+  }
+  pts.forEach((p,i)=>{
+    pts.forEach((q,j)=>{
+      if(j<=i) return;
+      if(Math.random()>0.55) return;
+      const line = document.createElementNS('http://www.w3.org/2000/svg','line');
+      line.setAttribute('x1',p[0]); line.setAttribute('y1',p[1]);
+      line.setAttribute('x2',q[0]); line.setAttribute('y2',q[1]);
+      svgEl.appendChild(line);
+      const packet = document.createElementNS('http://www.w3.org/2000/svg','circle');
+      packet.setAttribute('r','3'); packet.setAttribute('class','packet');
+      svgEl.appendChild(packet);
+      const dur = 2 + Math.random()*3;
+      gsap.to(packet, {
+        motionPath:{path:[{x:p[0],y:p[1]},{x:q[0],y:q[1]}]},
+        duration:dur, repeat:-1, ease:'none', delay:Math.random()*dur
+      }) || (function(){
+        // fallback without motionPath plugin: manual tween
+        let t0 = performance.now();
+        function step(now){
+          const t = ((now-t0)/1000/dur)%1;
+          packet.setAttribute('cx', p[0]+(q[0]-p[0])*t);
+          packet.setAttribute('cy', p[1]+(q[1]-p[1])*t);
+          requestAnimationFrame(step);
+        }
+        requestAnimationFrame(step);
+      })();
+    });
+  });
+}
+window.addEventListener('load', ()=>{
+  buildNetSVG(document.getElementById('net1960'), 5);
+  buildNetSVG(document.getElementById('net1970'), 6);
+  buildNetSVG(document.getElementById('net2020'), 7);
+});
+
+/* ============================================================
+   WORLD MAP MARKERS
+   ============================================================ */
+const COUNTRIES = [
+  {name:'USA', x:22, y:38, desc:'Home to ARPANET\'s first nodes and Silicon Valley, the US shaped much of the internet\'s early infrastructure and dominant platforms.'},
+  {name:'UK', x:47, y:28, desc:'Tim Berners-Lee, working at CERN, invented the World Wide Web in 1989, giving the internet the browsable form we recognize today.'},
+  {name:'Finland', x:54, y:16, desc:'Finland became the first country to declare broadband internet access a legal right for every citizen, in 2010.'},
+  {name:'South Korea', x:82, y:38, desc:'South Korea built some of the world\'s fastest, most widely available broadband and mobile networks starting in the early 2000s.'},
+  {name:'Japan', x:87, y:36, desc:'Japan pioneered mobile internet with i-mode in 1999, letting phones browse the web years before most of the world.'},
+  {name:'India', x:68, y:48, desc:'India\'s mobile-data boom, driven by cheap smartphones and low-cost data plans, brought hundreds of millions online in a single decade.'},
+  {name:'Kenya', x:56, y:56, desc:'Kenya\'s M-Pesa mobile money system, launched in 2007, showed the world how mobile networks could leapfrog traditional banking.'},
+  {name:'Estonia', x:56, y:18, desc:'Estonia rebuilt its government almost entirely online, from voting to taxes, earning it a reputation as a digital-first nation.'},
+  {name:'China', x:78, y:34, desc:'China developed a vast, largely self-contained internet ecosystem, with homegrown platforms serving over a billion users.'},
+  {name:'Brazil', x:32, y:66, desc:'Brazil became one of the most socially engaged internet populations on earth, driving huge growth in social media adoption.'},
+  {name:'Germany', x:50, y:26, desc:'Germany hosts one of the world\'s largest internet exchange points in Frankfurt, where enormous volumes of global traffic connect.'},
+  {name:'Australia', x:85, y:70, desc:'Australia\'s National Broadband Network was one of the most ambitious government fiber rollouts, aiming to connect a vast, sparse continent.'},
+];
+const markerLayer = document.getElementById('markerLayer');
+COUNTRIES.forEach(c=>{
+  const m = document.createElement('div');
+  m.className = 'marker';
+  m.style.left = c.x+'%'; m.style.top = c.y+'%';
+  m.innerHTML = '<div class="marker-label">'+c.name+'</div>';
+  m.addEventListener('click', ()=>{
+    playOpen();
+    panelEyebrow.textContent = 'WORLD / '+c.name.toUpperCase();
+    panelTitle.textContent = c.name;
+    panelDesc.textContent = c.desc;
+    panelBackdrop.classList.add('show');
+    markObject('country_'+c.name);
+  });
+  markerLayer.appendChild(m);
+});
+
+/* ============================================================
+   MOUSE INTERACTIONS: cursor dot, magnetic buttons, trail particles
+   ============================================================ */
+const cursorDot = document.getElementById('cursorDot');
+let mx=innerWidth/2, my=innerHeight/2, dx=mx, dy=my;
+window.addEventListener('mousemove', e=>{ mx=e.clientX; my=e.clientY; });
+(function loop(){
+  dx += (mx-dx)*.18; dy += (my-dy)*.18;
+  cursorDot.style.left = dx+'px'; cursorDot.style.top = dy+'px';
+  requestAnimationFrame(loop);
+})();
+
+// magnetic buttons
+document.querySelectorAll('.enter-btn, .connect-btn, .icon-btn, .obj, .app, .marker').forEach(el=>{
+  el.addEventListener('mousemove', e=>{
+    const r = el.getBoundingClientRect();
+    const relX = e.clientX - (r.left+r.width/2);
+    const relY = e.clientY - (r.top+r.height/2);
+    el.style.transform = 'translate('+(relX*0.06)+'px,'+(relY*0.06)+'px)';
+  });
+  el.addEventListener('mouseleave', ()=>{ el.style.transform=''; });
+});
+
+/* cursor-following particle trail on #cursor-canvas */
+const cCanvas = document.getElementById('cursor-canvas');
+const cCtx = cCanvas.getContext('2d');
+let trail = [];
+function resizeCanvases(){
+  [cCanvas, document.getElementById('bg-canvas')].forEach(c=>{ c.width = innerWidth; c.height = innerHeight; });
+}
+resizeCanvases();
+window.addEventListener('resize', resizeCanvases);
+window.addEventListener('mousemove', e=>{
+  trail.push({x:e.clientX, y:e.clientY, life:1});
+  if(trail.length>40) trail.shift();
+});
+function renderTrail(){
+  cCtx.clearRect(0,0,cCanvas.width,cCanvas.height);
+  trail.forEach((p,i)=>{
+    p.life -= 0.035;
+    cCtx.beginPath();
+    cCtx.arc(p.x,p.y, Math.max(p.life*3,0), 0, Math.PI*2);
+    cCtx.fillStyle = 'rgba(51,255,140,'+Math.max(p.life*.5,0)+')';
+    cCtx.fill();
+  });
+  trail = trail.filter(p=>p.life>0);
+  requestAnimationFrame(renderTrail);
+}
+renderTrail();
+
+/* ambient background particles */
+const bgCanvas = document.getElementById('bg-canvas');
+const bgCtx = bgCanvas.getContext('2d');
+let particles = Array.from({length:70}, ()=>({
+  x:Math.random()*innerWidth, y:Math.random()*innerHeight,
+  vx:(Math.random()-.5)*.15, vy:(Math.random()-.5)*.15, r:Math.random()*1.6+.4
+}));
+function renderBG(){
+  bgCtx.clearRect(0,0,bgCanvas.width,bgCanvas.height);
+  particles.forEach(p=>{
+    p.x+=p.vx; p.y+=p.vy;
+    if(p.x<0||p.x>innerWidth) p.vx*=-1;
+    if(p.y<0||p.y>innerHeight) p.vy*=-1;
+    bgCtx.beginPath();
+    bgCtx.arc(p.x,p.y,p.r,0,Math.PI*2);
+    bgCtx.fillStyle = 'rgba(150,220,200,.35)';
+    bgCtx.fill();
+  });
+  requestAnimationFrame(renderBG);
+}
+renderBG();
+
+/* landing canvas starfield */
+const landingCanvas = document.getElementById('landing-canvas');
+const lCtx = landingCanvas.getContext('2d');
+function sizeLanding(){ landingCanvas.width = innerWidth; landingCanvas.height = innerHeight; }
+sizeLanding(); window.addEventListener('resize', sizeLanding);
+let stars = Array.from({length:160}, ()=>({x:Math.random()*innerWidth,y:Math.random()*innerHeight,r:Math.random()*1.3+.2,tw:Math.random()*Math.PI*2}));
+function renderStars(t){
+  lCtx.clearRect(0,0,landingCanvas.width,landingCanvas.height);
+  stars.forEach(s=>{
+    const a = .3+Math.abs(Math.sin(t/900+s.tw))*.7;
+    lCtx.beginPath();
+    lCtx.arc(s.x,s.y,s.r,0,Math.PI*2);
+    lCtx.fillStyle = 'rgba(150,255,200,'+a+')';
+    lCtx.fill();
+  });
+  requestAnimationFrame(renderStars);
+}
+requestAnimationFrame(renderStars);
+
+/* ============================================================
+   EASTER EGGS: typed words, konami code
+   ============================================================ */
+function listenForTyped(word, cb){
+  let buffer = '';
+  window.addEventListener('keydown', e=>{
+    if(e.key.length===1) buffer += e.key.toLowerCase();
+    buffer = buffer.slice(-word.length);
+    if(buffer===word){ cb(); buffer=''; }
+  });
+}
+listenForTyped('1995', ()=>markSecret('typed1995', SECRET_NAMES.typed1995));
+listenForTyped('404', ()=>markSecret('typed404', SECRET_NAMES.typed404));
+listenForTyped('sarthak', ()=>markSecret('sarthakWord', SECRET_NAMES.sarthakWord));
+
+// konami code
+const KONAMI = ['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','b','a'];
+let kIndex = 0;
+window.addEventListener('keydown', e=>{
+  const key = e.key.length===1 ? e.key.toLowerCase() : e.key;
+  if(key === KONAMI[kIndex]){ kIndex++; if(kIndex===KONAMI.length){ markSecret('konami', SECRET_NAMES.konami); kIndex=0; } }
+  else { kIndex = (key===KONAMI[0]) ? 1 : 0; }
+});
+
+// keyboard arrow navigation between eras
+window.addEventListener('keydown', e=>{
+  if(!['ArrowDown','ArrowUp'].includes(e.key)) return;
+  if(document.activeElement && ['INPUT','TEXTAREA'].includes(document.activeElement.tagName)) return;
+  const idx = eraSections.findIndex(sec=>{
+    const r = sec.getBoundingClientRect();
+    return r.top <= innerHeight/2 && r.bottom >= innerHeight/2;
+  });
+  let next = idx;
+  if(e.key==='ArrowDown') next = Math.min(idx+1, eraSections.length-1);
+  if(e.key==='ArrowUp') next = Math.max(idx-1, 0);
+  if(next!==idx && eraSections[next]){ eraSections[next].scrollIntoView({behavior:'smooth'}); }
+});
+
+/* ============================================================
+   REDUCE MOTION TOGGLE
+   ============================================================ */
+const reduceBtn = document.getElementById('reduceBtn');
+let reduced = localStorage.getItem('itt_reduced') === 'on';
+function applyReduced(){
+  document.body.classList.toggle('reduced-motion', reduced);
+  document.getElementById('globeGrid').classList.toggle('reduce', reduced);
+  reduceBtn.textContent = 'Reduce Motion: ' + (reduced ? 'On' : 'Off');
+  reduceBtn.classList.toggle('active', reduced);
+}
+applyReduced();
+reduceBtn.addEventListener('click', ()=>{
+  reduced = !reduced;
+  localStorage.setItem('itt_reduced', reduced?'on':'off');
+  applyReduced();
+});
+
+/* general click sound for nav + objects */
+document.querySelectorAll('.nav-links a, .icon-btn').forEach(el=>el.addEventListener('click', playClick));
+
+/* init HUD on load */
+renderHUD();
+</script>
+</body>
+</html>
